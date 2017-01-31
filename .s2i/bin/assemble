@@ -1,0 +1,32 @@
+#!/bin/bash -e
+#
+# S2I assemble script for the 'wordpress' image.
+# The 'assemble' script builds your application source ready to run.
+#
+# For more information refer to the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+if [ "$1" = "-h" ]; then
+	# If the 'wordpress' assemble script is executed with '-h' flag,
+	# print the usage.
+	exec /usr/local/s2i/usage
+fi
+
+# Restore artifacts from the previous build (if they exist).
+#
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts"
+  cp -Rf /tmp/artifacts/htdocs/. /var/www/html
+else
+	echo "---> Installing application source"
+	mv /tmp/src/* /var/www/html
+	mv /var/www/html/wp-config.php-dist /var/www/html/wp-config.php
+fi
+
+echo "<?php echo '1';" > /var/www/html/health.php
+
+echo "---> Building application from source"
+# TODO: Add build steps for your application, eg npm install, bundle install
+chmod -R a+rwx /var/www/html && chown -R 1001:0 /var/www/html
+echo "---> Done building application from source"
